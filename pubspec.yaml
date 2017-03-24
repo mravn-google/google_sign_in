@@ -1,7 +1,9 @@
-name: google_sign_in
-version: 0.0.1
-author: Flutter Team <flutter-dev@googlegroups.com>
-description: Dart wrapper for Google Sign In SDK.
-homepage: https://github.com/flutter/google_sign_in
-environment:
-  sdk: '>=1.9.0 <2.0.0'
+name: xxpluginxx
+description: XxPluginXx
+
+flutter:
+  plugin:
+
+dependencies:
+  flutter:
+    sdk: flutter

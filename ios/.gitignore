@@ -29,12 +29,3 @@ xcuserdata
 Icon?
 .tags*
 
-/Flutter/app.flx
-/Flutter/app.dylib
-/Flutter/app.zip
-/Flutter/Flutter.framework
-/Flutter/Generated.xcconfig
-/ServiceDefinitions.json
-
-Podfile.lock
-Pods/

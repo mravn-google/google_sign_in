@@ -1,4 +1,4 @@
-# GoogleSignInExample
+# example
 
 A new flutter project.
 

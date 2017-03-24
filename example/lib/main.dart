@@ -1,89 +1,103 @@
-// Copyright 2016, the Flutter project authors.  Please see the AUTHORS file
-// for details. All rights reserved. Use of this source code is governed by a
-// BSD-style license that can be found in the LICENSE file.
-
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:xxpluginxx/xxpluginxx.dart';
 
 void main() {
-  runApp(
-    new MaterialApp(
-      title: 'Google Sign In',
-      home: new SignInDemo()
-    )
-  );
+  runApp(new MyApp());
 }
 
-class SignInDemo extends StatefulWidget {
+class MyApp extends StatelessWidget {
+  // This widget is the root of your application.
   @override
-  State createState() => new SignInDemoState();
+  Widget build(BuildContext context) {
+    return new MaterialApp(
+      title: 'Flutter Demo',
+      theme: new ThemeData(
+        // This is the theme of your application.
+        //
+        // Try running your application with "flutter run". You'll see
+        // the application has a blue toolbar. Then, without quitting
+        // the app, try changing the primarySwatch below to Colors.green
+        // and then invoke "hot reload" (press "r" in the console where
+        // you ran "flutter run", or press Run > Hot Reload App in IntelliJ).
+        // Notice that the counter didn't reset back to zero -- the application
+        // is not restarted.
+        primarySwatch: Colors.blue,
+      ),
+      home: new MyHomePage(title: 'Flutter Demo Home Page'),
+    );
+  }
 }
 
-class SignInDemoState extends State<SignInDemo> {
-  GoogleSignInAccount _currentUser;
+class MyHomePage extends StatefulWidget {
+  MyHomePage({Key key, this.title}) : super(key: key);
+
+  // This widget is the home page of your application. It is stateful,
+  // meaning that it has a State object (defined below) that contains
+  // fields that affect how it looks.
+
+  // This class is the configuration for the state. It holds the
+  // values (in this case the title) provided by the parent (in this
+  // case the App widget) and used by the build method of the State.
+  // Fields in a Widget subclass are always marked "final".
+
+  final String title;
+
+  @override
+  _MyHomePageState createState() => new _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  String _platformVersion = 'Unknown';
+  int _counter = 0;
 
   @override
   void initState() {
     super.initState();
-    GoogleSignIn.signInSilently().then(_handleGoogleSignInResult);
+    XxPluginXx.platformVersion.then((String platformVersion) {
+      setState(() {
+        _platformVersion = platformVersion;
+      });
+    });
   }
 
-  void _handleGoogleSignInResult(GoogleSignInResult result) {
-    setState(() => _currentUser = result.signInAccount);
+  void _incrementCounter() {
+    setState(() {
+      // This call to setState tells the Flutter framework that
+      // something has changed in this State, which causes it to rerun
+      // the build method below so that the display can reflect the
+      // updated values. If we changed _counter without calling
+      // setState(), then the build method would not be called again,
+      // and so nothing would appear to happen.
+      _counter++;
+    });
   }
 
-  Future<Null> _handleSignIn() async {
-    GoogleSignIn.signIn().then(_handleGoogleSignInResult);
-  }
-
-  void _handleSignOut() {
-    GoogleSignIn.disconnect().then(_handleGoogleSignInResult);
-  }
-
-  Widget _buildBody() {
-    if (_currentUser != null) {
-      return new Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: <Widget>[
-          new ListItem(
-            leading: new CircleAvatar(
-              child: new ClipOval(
-                child: new Image(image: new NetworkImage(_currentUser.photoUrl))
-              )
-            ),
-            title: new Text(_currentUser.displayName),
-            subtitle: new Text(_currentUser.email)
-          ),
-          new RaisedButton(
-            child: new Text('SIGN OUT'),
-            onPressed: _handleSignOut
-          )
-        ]
-      );
-    } else {
-      return new Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: <Widget>[
-          new Text("You are not currently signed in."),
-          new RaisedButton(
-            child: new Text('SIGN IN'),
-            onPressed: _handleSignIn
-          )
-        ]
-      );
-    }
-  }
-
+  @override
   Widget build(BuildContext context) {
+    // This method is rerun every time setState is called, for instance
+    // as done by the _incrementCounter method above.
+    // The Flutter framework has been optimized to make rerunning
+    // build methods fast, so that you can just rebuild anything that
+    // needs updating rather than having to individually change
+    // instances of widgets.
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text('Google Sign In')
+        // Here we take the value from the MyHomePage object that
+        // was created by the App.build method, and use it to set
+        // our appbar title.
+        title: new Text(config.title),
       ),
-      body: _buildBody()
+      body: new Center(
+        child: new Text(
+                'Running on: $_platformVersion\n'
+                'Button tapped $_counter time${ _counter == 1 ? '' : 's' }.',
+        )
+      ),
+      floatingActionButton: new FloatingActionButton(
+        onPressed: _incrementCounter,
+        tooltip: 'Increment',
+        child: new Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
