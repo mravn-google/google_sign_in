@@ -1,5 +1,5 @@
-name: xxpluginxx
-description: XxPluginXx
+name: google_sign_in
+description: Google Sign-In
 
 flutter:
   plugin:

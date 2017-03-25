@@ -1,103 +1,157 @@
+import 'dart:async';
+import 'dart:convert' show JSON;
+import 'dart:io' show Platform;
+
+import "package:http/http.dart" as http;
 import 'package:flutter/material.dart';
-import 'package:xxpluginxx/xxpluginxx.dart';
+import 'package:flutter/services.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 void main() {
-  runApp(new MyApp());
-}
+  GoogleSignIn.initialize(
+      scopes: [
+        'email',
+        'https://www.googleapis.com/auth/contacts.readonly',
+      ],
+  );
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return new MaterialApp(
-      title: 'Flutter Demo',
-      theme: new ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting
-        // the app, try changing the primarySwatch below to Colors.green
-        // and then invoke "hot reload" (press "r" in the console where
-        // you ran "flutter run", or press Run > Hot Reload App in IntelliJ).
-        // Notice that the counter didn't reset back to zero -- the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+  runApp(
+      new MaterialApp(
+          title: 'Google Sign In',
+          home: new SignInDemo(),
       ),
-      home: new MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
+  );
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful,
-  // meaning that it has a State object (defined below) that contains
-  // fields that affect how it looks.
-
-  // This class is the configuration for the state. It holds the
-  // values (in this case the title) provided by the parent (in this
-  // case the App widget) and used by the build method of the State.
-  // Fields in a Widget subclass are always marked "final".
-
-  final String title;
-
+class SignInDemo extends StatefulWidget {
   @override
-  _MyHomePageState createState() => new _MyHomePageState();
+  State createState() => new SignInDemoState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  String _platformVersion = 'Unknown';
-  int _counter = 0;
+class SignInDemoState extends State<SignInDemo> {
+  GoogleSignInAccount _currentUser;
+  String _contactText;
 
   @override
   void initState() {
     super.initState();
-    XxPluginXx.platformVersion.then((String platformVersion) {
-      setState(() {
-        _platformVersion = platformVersion;
+    GoogleSignIn.instance.then((GoogleSignIn googleSignIn) {
+      googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
+        setState(() {
+          _currentUser = account;
+        });
+        if (_currentUser != null) _handleGetContact();
+
       });
+      googleSignIn.signInSilently();
     });
   }
 
-  void _incrementCounter() {
+  Future<Null> _handleGetContact() async {
     setState(() {
-      // This call to setState tells the Flutter framework that
-      // something has changed in this State, which causes it to rerun
-      // the build method below so that the display can reflect the
-      // updated values. If we changed _counter without calling
-      // setState(), then the build method would not be called again,
-      // and so nothing would appear to happen.
-      _counter++;
+      _contactText = "Loading contact info...";
+    });
+    http.Response response = await http.get(
+        'https://people.googleapis.com/v1/people/me/connections',
+        headers: await _currentUser.authHeaders,
+    );
+    if (response.statusCode != 200) {
+      setState(() {
+        _contactText = "People API gave a ${response.statusCode} " +
+            "response. Check logs for details.";
+      });
+      print('People API ${response.statusCode} response: ${response.body}');
+      return;
+    }
+    Map<String, dynamic> data = JSON.decode(response.body);
+    String namedContact = _pickFirstNamedContact(data);
+    setState(() {
+      if (namedContact != null) {
+        _contactText = "I see you know $namedContact!";
+      } else {
+        _contactText = "No contacts to display.";
+      }
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance
-    // as done by the _incrementCounter method above.
-    // The Flutter framework has been optimized to make rerunning
-    // build methods fast, so that you can just rebuild anything that
-    // needs updating rather than having to individually change
-    // instances of widgets.
-    return new Scaffold(
-      appBar: new AppBar(
-        // Here we take the value from the MyHomePage object that
-        // was created by the App.build method, and use it to set
-        // our appbar title.
-        title: new Text(config.title),
-      ),
-      body: new Center(
-        child: new Text(
-                'Running on: $_platformVersion\n'
-                'Button tapped $_counter time${ _counter == 1 ? '' : 's' }.',
-        )
-      ),
-      floatingActionButton: new FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+  String _pickFirstNamedContact(Map<String, dynamic> data) {
+    List<Map<String, dynamic>> connections = data['connections'];
+    Map<String, dynamic> contact = connections?.firstWhere(
+            (Map<String, dynamic> contact) => contact['names'] != null,
+        orElse: () => null,
     );
+    if (contact != null) {
+      Map<String, dynamic> name = contact['names'].firstWhere(
+              (Map<String, dynamic> name) => name['displayName'] != null,
+          orElse: () => null,
+      );
+      if (name != null) {
+        return name['displayName'];
+      }
+    }
+    return null;
+  }
+
+  Future<Null> _handleSignIn() async {
+    GoogleSignIn googleSignIn = await GoogleSignIn.instance;
+    googleSignIn.signIn();
+  }
+
+  Future<Null> _handleSignOut() async {
+    GoogleSignIn googleSignIn = await GoogleSignIn.instance;
+    googleSignIn.disconnect();
+  }
+
+  Widget _buildBody() {
+    if (_currentUser != null) {
+      return new Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            new ListTile(
+                leading: new CircleAvatar(
+                    child: new ClipOval(
+                        child: new Image(
+                            image: new NetworkImage(_currentUser.photoUrl),
+                        ),
+                    ),
+                ),
+                title: new Text(_currentUser.displayName),
+                subtitle: new Text(_currentUser.email),
+            ),
+            new Text("Signed in successfully."),
+            new Text(_contactText),
+            new RaisedButton(
+                child: new Text('SIGN OUT'),
+                onPressed: _handleSignOut,
+            ),
+            new RaisedButton(
+                child: new Text('REFRESH'),
+                onPressed: _handleGetContact,
+            ),
+          ],
+      );
+    } else {
+      return new Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            new Text("You are not currently signed in."),
+            new RaisedButton(
+                child: new Text('SIGN IN'),
+                onPressed: _handleSignIn,
+            ),
+          ],
+      );
+    }
+  }
+
+  Widget build(BuildContext context) {
+    return new Scaffold(
+        appBar: new AppBar(
+            title: new Text('Google Sign In'),
+        ),
+        body: new ConstrainedBox(
+            constraints: const BoxConstraints.expand(),
+            child: _buildBody(),
+        ));
   }
 }

@@ -23,6 +23,7 @@ android {
     }
 
     defaultConfig {
+    applicationId "com.yourcompany.googlesignin.example"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
