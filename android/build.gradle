@@ -1,4 +1,4 @@
-group 'io.flutter.plugin'
+group 'io.flutter.plugins.googlesignin'
 version '1.0-SNAPSHOT'
 
 buildscript {
