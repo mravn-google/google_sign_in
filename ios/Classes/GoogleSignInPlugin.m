@@ -61,13 +61,14 @@
     } else if ([call.method isEqualToString:@"signOut"]) {
         [[GIDSignIn sharedInstance] signOut];
         [self respondWithAccount:nil error:nil];
+        result(nil, nil);
     } else if ([call.method isEqualToString:@"disconnect"]) {
         [_accountRequests insertObject:result atIndex:0];
         [[GIDSignIn sharedInstance] disconnect];
     } else {
-        [NSException
-         raise:@"Unexpected argument"
-         format:@"FlutterGoogleSignIn received an unexpected method call"];
+        result(nil, [FlutterError errorWithCode:@"Unknown method"
+                                        message:@"FlutterGoogleSignIn received an unexpected method call"
+                                        details:nil]);
     }
 }
 
