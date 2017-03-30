@@ -24,9 +24,8 @@
   self = [super init];
   if (self) {
     FlutterMethodChannel *channel = [FlutterMethodChannel
-        methodChannelNamed:@"plugins.flutter.io/google_sign_in"
-           binaryMessenger:flutterView
-                     codec:[FlutterStandardMethodCodec sharedInstance]];
+        methodChannelWithName:@"plugins.flutter.io/google_sign_in"
+              binaryMessenger:flutterView];
     _accountRequests = [[NSMutableArray alloc] init];
     [GIDSignIn sharedInstance].delegate = self;
     [GIDSignIn sharedInstance].uiDelegate = flutterView;
@@ -44,7 +43,7 @@
         [[GGLContext sharedInstance] configureWithError:&error];
         [GIDSignIn sharedInstance].scopes = call.arguments[@"scopes"];
         [GIDSignIn sharedInstance].hostedDomain = call.arguments[@"hostedDomain"];
-        result(nil, error.flutterError);
+        result(error.flutterError);
     } else if ([call.method isEqualToString:@"signInSilently"]) {
         [_accountRequests insertObject:result atIndex:0];
         [[GIDSignIn sharedInstance] signInSilently];
@@ -56,18 +55,17 @@
         GIDAuthentication *auth = currentUser.authentication;
         [auth getTokensWithHandler:^void(GIDAuthentication* authentication,
                                          NSError* error) {
-          result(authentication.accessToken, error.flutterError);
+          result(error.flutterError == nil ? authentication.accessToken : error.flutterError);
         }];
     } else if ([call.method isEqualToString:@"signOut"]) {
         [[GIDSignIn sharedInstance] signOut];
         [self respondWithAccount:nil error:nil];
+        result(nil);
     } else if ([call.method isEqualToString:@"disconnect"]) {
         [_accountRequests insertObject:result atIndex:0];
         [[GIDSignIn sharedInstance] disconnect];
     } else {
-        [NSException
-         raise:@"Unexpected argument"
-         format:@"FlutterGoogleSignIn received an unexpected method call"];
+        result(FlutterMethodNotImplemented);
     }
 }
 
@@ -120,7 +118,7 @@ didSignInForUser:(GIDGoogleUser*)user
   NSArray<FlutterResultReceiver> *requests = _accountRequests;
   _accountRequests = [[NSMutableArray alloc] init];
   for (FlutterResultReceiver accountRequest in requests) {
-    accountRequest(account, error.flutterError);
+    accountRequest(error.flutterError == nil ? account : error.flutterError);
   }
 }
 @end
