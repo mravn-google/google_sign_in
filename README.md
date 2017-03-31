@@ -5,7 +5,7 @@ A Flutter plugin for [Google Sign In](https://developers.google.com/identity/).
 Note: This is a work-in-progress, and is not fully supported by the Flutter team.
 (For example, we don't have this under continuous integration and testing.)
 
-Known issue: This plug-in does not work with the latest Flutter master, but is known to work with version 86e9fc1c68499da07ac0d87f0e6d3738110b1752 of Flutter. See flutter/flutter#9125.
+Known issue: This plug-in does not work with the latest Flutter master, but is known to work with version 86e9fc1c6 of Flutter. See [issue 9125](https://github.com/flutter/flutter/issues/9125).
 
 ## Android integration
 
