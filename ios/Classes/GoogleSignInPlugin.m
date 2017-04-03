@@ -24,9 +24,8 @@
   self = [super init];
   if (self) {
     FlutterMethodChannel *channel = [FlutterMethodChannel
-        methodChannelNamed:@"plugins.flutter.io/google_sign_in"
-           binaryMessenger:flutterView
-                     codec:[FlutterStandardMethodCodec sharedInstance]];
+        methodChannelWithName:@"plugins.flutter.io/google_sign_in"
+              binaryMessenger:flutterView];
     _accountRequests = [[NSMutableArray alloc] init];
     [GIDSignIn sharedInstance].delegate = self;
     [GIDSignIn sharedInstance].uiDelegate = flutterView;
@@ -44,7 +43,7 @@
         [[GGLContext sharedInstance] configureWithError:&error];
         [GIDSignIn sharedInstance].scopes = call.arguments[@"scopes"];
         [GIDSignIn sharedInstance].hostedDomain = call.arguments[@"hostedDomain"];
-        result(nil, error.flutterError);
+        result(error.flutterError);
     } else if ([call.method isEqualToString:@"signInSilently"]) {
         [_accountRequests insertObject:result atIndex:0];
         [[GIDSignIn sharedInstance] signInSilently];
@@ -56,7 +55,7 @@
         GIDAuthentication *auth = currentUser.authentication;
         [auth getTokensWithHandler:^void(GIDAuthentication* authentication,
                                          NSError* error) {
-          result(authentication.accessToken, error.flutterError);
+          result(error != nil ? error.flutterError : authentication.accessToken);
         }];
     } else if ([call.method isEqualToString:@"signOut"]) {
         [[GIDSignIn sharedInstance] signOut];
@@ -93,10 +92,8 @@ didSignInForUser:(GIDGoogleUser*)user
   } else {
     NSURL* photoUrl;
     if (user.profile.hasImage) {
-      // TODO(jackson): Allow configuring the image dimensions.
-      // 256px is probably more than needed for most devices (64dp @ 320dpi =
-      // 128px)
-      photoUrl = [user.profile imageURLWithDimension:256];
+      // Placeholder that will be replaced by on the Dart side based on screen size
+      photoUrl = [user.profile imageURLWithDimension:1337];
     }
     [self respondWithAccount:@{
                                @"displayName" : user.profile.name ?: [NSNull null],
@@ -120,7 +117,7 @@ didSignInForUser:(GIDGoogleUser*)user
   NSArray<FlutterResultReceiver> *requests = _accountRequests;
   _accountRequests = [[NSMutableArray alloc] init];
   for (FlutterResultReceiver accountRequest in requests) {
-    accountRequest(account, error.flutterError);
+    accountRequest(error != nil ? error.flutterError : account);
   }
 }
 @end
