@@ -161,6 +161,7 @@ class GoogleUserCircleAvatar extends StatelessWidget {
     if (_primaryProfileImageUrl == null) return null;
     Uri profileUri = Uri.parse(_primaryProfileImageUrl);
     List<String> pathSegments = new List<String>.from(profileUri.pathSegments);
+    pathSegments.remove("s1337"); // placeholder value added by iOS plugin
     pathSegments.insert(pathSegments.length - 1, "s${size.round()}-c");
     return new Uri(
       scheme: profileUri.scheme,
