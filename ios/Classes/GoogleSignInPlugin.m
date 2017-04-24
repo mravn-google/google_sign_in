@@ -59,7 +59,6 @@
         }];
     } else if ([call.method isEqualToString:@"signOut"]) {
         [[GIDSignIn sharedInstance] signOut];
-        [self respondWithAccount:nil error:nil];
         result(nil);
     } else if ([call.method isEqualToString:@"disconnect"]) {
         [_accountRequests insertObject:result atIndex:0];
