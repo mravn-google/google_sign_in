@@ -28,6 +28,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import io.flutter.app.FlutterActivity;
 import io.flutter.view.FlutterView;
 import java.util.List;
 import java.util.Queue;
@@ -389,7 +390,7 @@ public class GoogleSignInPlugin
        finishWithSuccess(getSignInResponse(result.getSignInAccount()));
      } else {
        finishWithSuccess(null);
-       // TODO(jackson): Communicate status. If they
+       // TODO(jackson): Communicate status about reason for failure, e.g.
        // finishWithError(ERROR_REASON_STATUS, result.getStatus().toString());
      }
    }

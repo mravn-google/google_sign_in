@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart' show PlatformMethodChannel;
+import 'package:flutter/material.dart';
 
 class GoogleSignInAccount {
   final String displayName;
@@ -118,7 +119,7 @@ class GoogleSignIn {
 
   Future<GoogleSignInAccount> _callMethod(String method) async {
     Map<String, dynamic> response = await _channel.invokeMethod(method);
-    _currentUser = response != null ? new GoogleSignInAccount._(response): null;
+    _currentUser = response != null ? new GoogleSignInAccount._(response) : null;
     _streamController.add(_currentUser);
     return _currentUser;
   }
@@ -139,4 +140,46 @@ class GoogleSignIn {
   /// Disconnects the current user from the app and revokes previous
   /// authentication.
   Future<GoogleSignInAccount> disconnect() => _callMethod('disconnect');
+}
+
+/// Builds a CircleAvatar profile image of the appropriate resolution
+class GoogleUserCircleAvatar extends StatelessWidget {
+  const GoogleUserCircleAvatar(this._primaryProfileImageUrl);
+  final String _primaryProfileImageUrl;
+
+  Widget build(BuildContext context) {
+    return new CircleAvatar(
+      child: new LayoutBuilder(builder: _buildClippedImage),
+    );
+  }
+
+  /// Adds sizing information to the URL, inserted as the last
+  /// directory before the image filename. The format is "/sNN-c/",
+  /// where NN is the max width/height of the image, and "c" indicates we
+  /// want the image cropped.
+  String _sizedProfileImageUrl(double size) {
+    if (_primaryProfileImageUrl == null) return null;
+    Uri profileUri = Uri.parse(_primaryProfileImageUrl);
+    List<String> pathSegments = new List<String>.from(profileUri.pathSegments);
+    pathSegments.remove("s1337"); // placeholder value added by iOS plugin
+    pathSegments.insert(pathSegments.length - 1, "s${size.round()}-c");
+    return new Uri(
+      scheme: profileUri.scheme,
+      host: profileUri.host,
+      pathSegments: pathSegments,
+    ).toString();
+  }
+
+  Widget _buildClippedImage(BuildContext context, BoxConstraints constraints) {
+    assert(constraints.maxWidth == constraints.maxHeight);
+    return new ClipOval(
+      child: new Image(
+        image: new NetworkImage(
+          _sizedProfileImageUrl(
+            MediaQuery.of(context).devicePixelRatio * constraints.maxWidth,
+          ),
+        ),
+      ),
+    );
+  }
 }

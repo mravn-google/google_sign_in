@@ -55,7 +55,7 @@
         GIDAuthentication *auth = currentUser.authentication;
         [auth getTokensWithHandler:^void(GIDAuthentication* authentication,
                                          NSError* error) {
-          result(error.flutterError == nil ? authentication.accessToken : error.flutterError);
+          result(error != nil ? error.flutterError : authentication.accessToken);
         }];
     } else if ([call.method isEqualToString:@"signOut"]) {
         [[GIDSignIn sharedInstance] signOut];
@@ -91,10 +91,8 @@ didSignInForUser:(GIDGoogleUser*)user
   } else {
     NSURL* photoUrl;
     if (user.profile.hasImage) {
-      // TODO(jackson): Allow configuring the image dimensions.
-      // 256px is probably more than needed for most devices (64dp @ 320dpi =
-      // 128px)
-      photoUrl = [user.profile imageURLWithDimension:256];
+      // Placeholder that will be replaced by on the Dart side based on screen size
+      photoUrl = [user.profile imageURLWithDimension:1337];
     }
     [self respondWithAccount:@{
                                @"displayName" : user.profile.name ?: [NSNull null],
@@ -118,7 +116,7 @@ didSignInForUser:(GIDGoogleUser*)user
   NSArray<FlutterResultReceiver> *requests = _accountRequests;
   _accountRequests = [[NSMutableArray alloc] init];
   for (FlutterResultReceiver accountRequest in requests) {
-    accountRequest(error.flutterError == nil ? account : error.flutterError);
+    accountRequest(error != nil ? error.flutterError : account);
   }
 }
 @end
